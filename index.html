@@ -3,86 +3,60 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0b0b10">
-<title>Hey Ariana 👀</title>
+<meta name="theme-color" content="#000000">
+<title>👀</title>
 <style>
-*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;overflow:hidden;background:#0b0b10;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overscroll-behavior:none;touch-action:manipulation;user-select:none;-webkit-user-select:none}
-body{display:flex;flex-direction:column;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
-header{padding:18px 20px 6px;text-align:center}
-h1{font-size:clamp(20px,6vw,28px);font-weight:800;letter-spacing:-.02em}
-#hint{opacity:.6;font-size:14px;margin-top:4px}
-#stage{flex:1;position:relative;margin:12px 16px;contain:layout paint size;perspective:1000px}
-.card{position:absolute;inset:0;border-radius:24px;overflow:hidden;background:#1a1a22;box-shadow:0 12px 40px rgba(0,0,0,.5);will-change:transform,opacity;transform:translate3d(0,0,0);backface-visibility:hidden}
-.card img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;-webkit-user-drag:none}
-.card.in{animation:in .32s cubic-bezier(.2,.9,.25,1.15) both}
-.card.out{animation:out .26s cubic-bezier(.4,0,1,1) both;pointer-events:none}
-@keyframes in{from{transform:translate3d(0,40px,0) scale(.88) rotate(var(--r,3deg));opacity:0}to{transform:translate3d(0,0,0) scale(1) rotate(0);opacity:1}}
-@keyframes out{to{transform:translate3d(var(--x,-110%),-20px,0) rotate(var(--o,-10deg));opacity:0}}
-.card.shake{animation:shake .25s ease-out}
-@keyframes shake{30%{transform:translate3d(-8px,0,0)}60%{transform:translate3d(8px,0,0)}}
-#bar{display:flex;justify-content:center;align-items:center;gap:8px;padding:6px 0 18px;font-size:14px;opacity:.8}
-#count{font-variant-numeric:tabular-nums}
-#empty{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:24px;line-height:1.5;opacity:.8}
-@media (prefers-reduced-motion:reduce){.card.in,.card.out,.card.shake{animation-duration:.01s}}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;overflow:hidden;background:#000;overscroll-behavior:none;touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;cursor:pointer}
+#stage{position:fixed;inset:0;contain:layout paint size}
+.card{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);will-change:transform,opacity;backface-visibility:hidden}
+.card img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;display:block;pointer-events:none;-webkit-user-drag:none}
+.card.in{animation:in .16s cubic-bezier(.2,.8,.3,1) both}
+.card.out{animation:out .12s ease-in both;pointer-events:none}
+@keyframes in{from{transform:translate3d(0,0,0) scale(.94);opacity:0}to{transform:translate3d(0,0,0) scale(1);opacity:1}}
+@keyframes out{to{transform:translate3d(var(--x,-40%),0,0) rotate(var(--o,-6deg));opacity:0}}
+@media (prefers-reduced-motion:reduce){.card.in,.card.out{animation-duration:.01s}}
 </style>
 </head>
 <body>
-<header><h1>Ariana, tap me 😏</h1><p id="hint">One more… if you dare</p></header>
-<main id="stage" role="button" aria-label="Show next picture" tabindex="0"><div id="empty">No photos yet.</div></main>
-<div id="bar"><span id="count"></span></div>
+<main id="stage"></main>
 <script>
 (()=>{
 const S='_2026-11-12_22-26-36.jpg';
 const PHOTOS=[1,2,3,4,5,6,7,8,9,10,11,13,15,16,18,19,20,21,22,24,25,26,27,33,35,36,37].map(n=>`images/photo_${n}${S}`).concat(['images/photo_2026-11-12_22-09-39.jpg','images/photo_2026-11-12_22-09-09.jpg']);
-const stage=document.getElementById('stage'),count=document.getElementById('count'),hint=document.getElementById('hint'),empty=document.getElementById('empty');
-const LINES=['One more… if you dare','Oh, there\'s more 😳','Keep going!','You look amazing here 😂','Still here?','Almost there…','Why are you still tapping?','Okay this one is the best'];
-const imgs=[];let i=-1,busy=false,cur=null,done=false;
+const stage=document.getElementById('stage');
+const imgs=[];let i=-1,cur=null;
 
 const load=src=>new Promise(r=>{const m=new Image();m.decoding='async';m.src=src;m.onload=()=>(m.decode?m.decode().catch(()=>{}):Promise.resolve()).then(()=>r(m));m.onerror=()=>r(null)});
 
-async function init(){
-  const first=await load(PHOTOS[0]);
-  if(!first){empty.style.display='flex';return}
-  imgs[0]=first;show(0);
-  // load the rest in order in the background
-  for(let n=1;n<PHOTOS.length;n++){const m=await load(PHOTOS[n]);if(m)imgs.push(m);update()}
-}
-
-function update(){count.textContent=imgs.length?`${i+1} / ${imgs.length}`:''}
-
 function show(n){
-  if(!imgs[n])return;
-  busy=true;empty.style.display='none';
   const old=cur;i=n;
   const c=document.createElement('div');c.className='card in';
-  c.style.setProperty('--r',(Math.random()*8-4).toFixed(1)+'deg');
   const m=imgs[n].cloneNode();m.alt='';c.appendChild(m);
   stage.appendChild(c);cur=c;
-  hint.textContent=LINES[n%LINES.length];
+  c.addEventListener('animationend',()=>c.classList.remove('in'),{once:true});
   if(old){
     const d=Math.random()<.5?-1:1;
-    old.style.setProperty('--x',d*110+'%');old.style.setProperty('--o',d*10+'deg');
+    old.style.setProperty('--x',d*40+'%');old.style.setProperty('--o',d*6+'deg');
     old.className='card out';
-    old.addEventListener('animationend',()=>old.remove(),{once:true});
+    setTimeout(()=>old.remove(),150);
   }
-  c.addEventListener('animationend',()=>{c.classList.remove('in');busy=false},{once:true});
-  update();
 }
 
 function next(){
-  if(busy||!imgs.length)return;
-  if(i+1>=imgs.length){
-    if(!done){done=true;hint.textContent='That\'s all! Tap to start over 🔁'}
-    else{done=false;show(0);return}
-    cur.classList.remove('shake');void cur.offsetWidth;cur.classList.add('shake');
-    return;
-  }
-  show(i+1);
+  if(!imgs.length)return;
+  show((i+1)%imgs.length);
 }
 
-stage.addEventListener('pointerdown',e=>{e.preventDefault();next()});
-stage.addEventListener('keydown',e=>{if(e.key===' '||e.key==='Enter'||e.key==='ArrowRight'){e.preventDefault();next()}});
+async function init(){
+  const first=await load(PHOTOS[0]);
+  if(!first)return;
+  imgs.push(first);show(0);
+  for(let n=1;n<PHOTOS.length;n++){const m=await load(PHOTOS[n]);if(m)imgs.push(m)}
+}
+
+document.addEventListener('pointerdown',e=>{e.preventDefault();next()});
+document.addEventListener('keydown',e=>{if(e.key===' '||e.key==='Enter'||e.key==='ArrowRight'){e.preventDefault();next()}});
 init();
 })();
 </script>
