@@ -29,30 +29,24 @@ h1{font-size:clamp(20px,6vw,28px);font-weight:800;letter-spacing:-.02em}
 </head>
 <body>
 <header><h1>Ariana, tap me 😏</h1><p id="hint">One more… if you dare</p></header>
-<main id="stage" role="button" aria-label="Show next picture" tabindex="0"><div id="empty">No photos yet.<br>Add images/1.jpg, 2.jpg, 3.jpg…</div></main>
+<main id="stage" role="button" aria-label="Show next picture" tabindex="0"><div id="empty">No photos yet.</div></main>
 <div id="bar"><span id="count"></span></div>
 <script>
 (()=>{
-// Optional: list exact files here, else images/1.jpg, 2.jpg ... are auto-detected.
-const PHOTOS=[];
-const MAX=100, EXTS=['jpg','jpeg','png','webp'];
+const S='_2026-11-12_22-26-36.jpg';
+const PHOTOS=[1,2,3,4,5,6,7,8,9,10,11,13,15,16,18,19,20,21,22,24,25,26,27,33,35,36,37].map(n=>`images/photo_${n}${S}`).concat(['images/photo_2026-11-12_22-09-39.jpg','images/photo_2026-11-12_22-09-09.jpg']);
 const stage=document.getElementById('stage'),count=document.getElementById('count'),hint=document.getElementById('hint'),empty=document.getElementById('empty');
 const LINES=['One more… if you dare','Oh, there\'s more 😳','Keep going!','You look amazing here 😂','Still here?','Almost there…','Why are you still tapping?','Okay this one is the best'];
 const imgs=[];let i=-1,busy=false,cur=null,done=false;
 
 const load=src=>new Promise(r=>{const m=new Image();m.decoding='async';m.src=src;m.onload=()=>(m.decode?m.decode().catch(()=>{}):Promise.resolve()).then(()=>r(m));m.onerror=()=>r(null)});
-async function probe(n){for(const e of EXTS){const m=await load(`images/${n}.${e}`);if(m)return m}return null}
 
 async function init(){
-  if(PHOTOS.length){const l=await Promise.all(PHOTOS.map(load));l.forEach(m=>m&&imgs.push(m))}
-  else{
-    const first=await probe(1);
-    if(first){imgs.push(first);show(0)}
-    for(let n=2;n<=MAX;n++){const m=await probe(n);if(!m)break;imgs.push(m);update()}
-    update();return;
-  }
-  if(!imgs.length){empty.style.display='flex';return}
-  show(0);
+  const first=await load(PHOTOS[0]);
+  if(!first){empty.style.display='flex';return}
+  imgs[0]=first;show(0);
+  // load the rest in order in the background
+  for(let n=1;n<PHOTOS.length;n++){const m=await load(PHOTOS[n]);if(m)imgs.push(m);update()}
 }
 
 function update(){count.textContent=imgs.length?`${i+1} / ${imgs.length}`:''}
